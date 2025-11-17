@@ -1,0 +1,13 @@
+import NextAuth from 'next-auth'
+
+declare module 'next-auth' {
+  interface Session {
+    accessToken?: string
+    backendToken?: string
+  }
+  
+  interface JWT {
+    accessToken?: string
+    backendToken?: string
+  }
+}

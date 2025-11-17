@@ -1,0 +1,62 @@
+# Environment variables
+.env
+.env.local
+.env.production
+.env.staging
+
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+.kiro/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+
+# Build outputs
+.next/
+dist/
+build/
+*.tsbuildinfo
+.swc/
+
+# Testing
+coverage/
+.coverage
+.pytest_cache/
+*.pyc
+__pycache__/
+
+# Uploads
+uploads/
+
+# Credentials
+credentials.json
+token.json
+
+# Agent logs
+agent.log
+
+DEPLOYMENT.md
+FILE_INVENTORY.md
