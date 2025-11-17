@@ -1,0 +1,31 @@
+# Render Blueprint for Backend Deployment
+# This file automates the deployment setup on Render
+
+services:
+  - type: web
+    name: assignment-solver-backend
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: AGENT_COMMAND
+        value: python -m src.agent
+      - key: SECRET_KEY
+        generateValue: true
+        sync: false
+      - key: BACKEND_API_KEY
+        generateValue: true
+        sync: false
+      - key: MONGODB_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
