@@ -34,9 +34,9 @@ class APIClient {
     
     // Get session token if available
     const session = await getSession()
-    const headers: HeadersInit = {
-      ...this.defaultHeaders,
-      ...options.headers,
+    const headers: Record<string, string> = {
+      ...this.defaultHeaders as Record<string, string>,
+      ...(options.headers as Record<string, string> || {}),
     }
     
     // Add Authorization header if we have a backend token
