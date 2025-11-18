@@ -28,6 +28,8 @@ async def sync_google_classroom(
     Fetches all coursework from all courses and stores them in the database.
     """
     logger.info(f"Starting Google Classroom sync for user: {current_user.email}")
+    logger.info(f"User ID type: {type(current_user.id)}, value: {current_user.id}")
+    logger.info(f"User ID as string: {str(current_user.id)}")
     
     # Check if user has Google credentials
     if not current_user.google_access_token:
@@ -129,9 +131,9 @@ async def sync_google_classroom(
                     
                     # Save to database
                     assignment_dict = new_assignment.dict(by_alias=True, exclude={'id'})
-                    logger.info(f"Saving assignment with user_id: {assignment_dict.get('user_id')}")
+                    logger.info(f"Assignment dict user_id: {assignment_dict.get('user_id')} (type: {type(assignment_dict.get('user_id'))})")
                     created_id = await assignment_repo.create(assignment_dict)
-                    logger.info(f"Created assignment {created_id} for user {current_user.id}")
+                    logger.info(f"Created assignment {created_id} with title: {assignment_dict.get('title')}")
                     synced_count += 1
                     
             except HttpError as course_error:
@@ -162,6 +164,11 @@ async def sync_google_classroom(
             logger.warning(f"Failed to auto-cleanup duplicates: {cleanup_error}")
         
         logger.info(f"Sync completed: {synced_count} new, {skipped_count} skipped")
+        
+        # Log what's in database after sync
+        collection = await assignment_repo.get_collection()
+        count_in_db = await collection.count_documents({"user_id": str(current_user.id)})
+        logger.info(f"Total assignments in DB for user {str(current_user.id)}: {count_in_db}")
         
         return {
             "success": True,

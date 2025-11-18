@@ -719,10 +719,13 @@ async def debug_assignment_count(
         # Get total count with ObjectId
         total_obj = await collection.count_documents({"user_id": current_user.id})
         
+        # Get all documents to see actual user_id format
+        all_assignments = await collection.find({}).limit(10).to_list(length=10)
+        
         # Get all distinct user_ids to see format
         all_user_ids = await collection.distinct("user_id")
         
-        # Get sample assignments
+        # Get sample assignments with this user_id
         sample = await collection.find({"user_id": user_id_str}).limit(5).to_list(length=5)
         
         # Convert ObjectId to string for JSON serialization
@@ -730,16 +733,28 @@ async def debug_assignment_count(
             doc["_id"] = str(doc["_id"])
             if isinstance(doc.get("user_id"), ObjectId):
                 doc["user_id_type"] = "ObjectId"
+                doc["user_id"] = str(doc["user_id"])
             else:
                 doc["user_id_type"] = type(doc.get("user_id")).__name__
+        
+        # Check what format user_ids are stored in
+        user_id_types = {}
+        for assignment in all_assignments:
+            uid = assignment.get("user_id")
+            uid_type = type(uid).__name__
+            if uid_type not in user_id_types:
+                user_id_types[uid_type] = []
+            user_id_types[uid_type].append(str(uid))
         
         return {
             "current_user_id": user_id_str,
             "current_user_id_type": type(current_user.id).__name__,
-            "total_count_string": total,
-            "total_count_objectid": total_obj,
+            "total_count_string_query": total,
+            "total_count_objectid_query": total_obj,
             "all_user_ids_in_db": [str(uid) for uid in all_user_ids],
-            "sample_assignments": sample
+            "user_id_storage_types": user_id_types,
+            "sample_assignments": sample,
+            "total_assignments_in_db": await collection.count_documents({})
         }
     except Exception as e:
         logger.error(f"Debug endpoint error: {e}", exc_info=True)
