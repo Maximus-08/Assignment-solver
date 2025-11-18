@@ -128,7 +128,10 @@ async def sync_google_classroom(
                     )
                     
                     # Save to database
-                    await assignment_repo.create(new_assignment.dict(by_alias=True, exclude={'id'}))
+                    assignment_dict = new_assignment.dict(by_alias=True, exclude={'id'})
+                    logger.info(f"Saving assignment with user_id: {assignment_dict.get('user_id')}")
+                    created_id = await assignment_repo.create(assignment_dict)
+                    logger.info(f"Created assignment {created_id} for user {current_user.id}")
                     synced_count += 1
                     
             except HttpError as course_error:

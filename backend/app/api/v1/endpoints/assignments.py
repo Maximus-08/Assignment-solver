@@ -104,9 +104,11 @@ async def get_assignments(
             assignments.append(AssignmentResponse(**assignment_data))
         
         # Get total count for pagination
-        total_count = await assignment_repo.count({"user_id": str(current_user.id)})
+        user_id_str = str(current_user.id)
+        total_count = await assignment_repo.count({"user_id": user_id_str})
         
-        logger.info(f"Found {len(assignments)} assignments (total {total_count}) for user {current_user.id}")
+        logger.info(f"Query: user_id={user_id_str}, Found {len(assignments)} assignments (total {total_count})")
+        logger.info(f"User object ID type: {type(current_user.id)}, value: {current_user.id}")
         
         return AssignmentListResponse(
             assignments=assignments,
@@ -698,4 +700,50 @@ async def delete_attachment(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete attachment: {str(e)}"
+        )
+
+@router.get("/debug/count")
+async def debug_assignment_count(
+    current_user: UserModel = Depends(get_current_user)
+):
+    """Debug endpoint to check assignment count in database"""
+    try:
+        assignment_repo = AssignmentRepository()
+        collection = await assignment_repo.get_collection()
+        
+        user_id_str = str(current_user.id)
+        
+        # Get total count with string
+        total = await collection.count_documents({"user_id": user_id_str})
+        
+        # Get total count with ObjectId
+        total_obj = await collection.count_documents({"user_id": current_user.id})
+        
+        # Get all distinct user_ids to see format
+        all_user_ids = await collection.distinct("user_id")
+        
+        # Get sample assignments
+        sample = await collection.find({"user_id": user_id_str}).limit(5).to_list(length=5)
+        
+        # Convert ObjectId to string for JSON serialization
+        for doc in sample:
+            doc["_id"] = str(doc["_id"])
+            if isinstance(doc.get("user_id"), ObjectId):
+                doc["user_id_type"] = "ObjectId"
+            else:
+                doc["user_id_type"] = type(doc.get("user_id")).__name__
+        
+        return {
+            "current_user_id": user_id_str,
+            "current_user_id_type": type(current_user.id).__name__,
+            "total_count_string": total,
+            "total_count_objectid": total_obj,
+            "all_user_ids_in_db": [str(uid) for uid in all_user_ids],
+            "sample_assignments": sample
+        }
+    except Exception as e:
+        logger.error(f"Debug endpoint error: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Debug failed: {str(e)}"
         )

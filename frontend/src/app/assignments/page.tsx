@@ -40,7 +40,11 @@ export default function AssignmentsPage() {
       // Invalidate and refetch all assignment queries
       await queryClient.invalidateQueries({ 
         queryKey: assignmentKeys.all,
-        refetchType: 'active'
+        refetchType: 'all'
+      })
+      // Force immediate refetch of active queries
+      await queryClient.refetchQueries({ 
+        queryKey: assignmentKeys.all 
       })
       
       setSyncMessage(

@@ -16,7 +16,9 @@ class AssignmentRepository(BaseRepository):
     
     async def get_assignments_by_user(self, user_id: str, skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
         """Get assignments for a specific user"""
-        return await self.find({"user_id": user_id}, skip=skip, limit=limit)
+        collection = await self.get_collection()
+        cursor = collection.find({"user_id": user_id}).sort("created_at", -1).skip(skip).limit(limit)
+        return await cursor.to_list(length=limit)
     
     async def search_assignments(self, user_id: str, query: str, skip: int = 0, limit: int = 100) -> List[Dict[str, Any]]:
         """Search assignments by text query"""
@@ -50,7 +52,9 @@ class AssignmentRepository(BaseRepository):
                 filter_dict["created_at"] = {}
             filter_dict["created_at"]["$lte"] = filters["date_to"]
         
-        return await self.find(filter_dict, skip=skip, limit=limit)
+        collection = await self.get_collection()
+        cursor = collection.find(filter_dict).sort("created_at", -1).skip(skip).limit(limit)
+        return await cursor.to_list(length=limit)
     
     async def update_assignment_status(self, assignment_id: str, status: AssignmentStatus) -> bool:
         """Update assignment status"""
