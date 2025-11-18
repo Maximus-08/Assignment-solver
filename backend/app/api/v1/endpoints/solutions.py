@@ -409,26 +409,19 @@ async def run_agent_for_assignment(assignment_id: str, user_id: str):
     try:
         logger.info(f"Starting agent for assignment {assignment_id}, user {user_id}")
         
-        # Get path to agent directory (go up from backend/app/api/v1/endpoints to backend, then to project root, then to agent)
-        backend_dir = Path(__file__).parent.parent.parent.parent.parent
-        project_root = backend_dir.parent
-        agent_dir = project_root / "agent"
+        # Get path to agent directory (backend/agent)
+        backend_dir = Path(__file__).parent.parent.parent.parent
+        agent_dir = backend_dir / "agent"
         
-        # Get agent's Python executable (from venv if exists)
-        agent_python = agent_dir / "venv" / "Scripts" / "python.exe"
-        if not agent_python.exists():
-            agent_python = str(sys.executable)
-            logger.info(f"Agent venv not found, using system Python: {agent_python}")
-        else:
-            agent_python = str(agent_python)
-            logger.info(f"Using agent venv Python: {agent_python}")
+        # Use system Python executable
+        agent_python = str(sys.executable)
+        logger.info(f"Using Python: {agent_python}")
         
         # Get path to main.py
         main_script = str(agent_dir / "main.py")
         logger.info(f"Agent directory: {agent_dir}, main script: {main_script}")
         
         # Run agent with specific assignment ID using subprocess in executor
-        # (Windows doesn't support asyncio.create_subprocess_exec well)
         def run_agent():
             import subprocess
             logger.info(f"Executing: {agent_python} {main_script} --assignment-id {assignment_id} --user-id {user_id}")
