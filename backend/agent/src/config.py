@@ -17,7 +17,7 @@ class Settings(BaseModel):
     GEMINI_API_KEY: Optional[str] = None
     GEMINI_MODEL: str = "gemini-2.0-flash"
     
-    # Backend API
+    # Backend API (for Render deployment, use internal URL)
     BACKEND_API_URL: str = "http://localhost:8000"
     BACKEND_API_KEY: Optional[str] = None
     

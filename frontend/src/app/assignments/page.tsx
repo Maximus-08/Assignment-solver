@@ -4,14 +4,17 @@ import { useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import AssignmentList from '@/components/assignments/AssignmentList'
 import SearchAndFilter from '@/components/assignments/SearchAndFilter'
 import { apiClient } from '@/lib/api'
+import { assignmentKeys } from '@/hooks/useAssignments'
 
 export default function AssignmentsPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSubject, setSelectedSubject] = useState('')
   const [sortBy, setSortBy] = useState('upload_date')
@@ -34,8 +37,11 @@ export default function AssignmentsPage() {
       // The backend returns data directly, not wrapped in a data property
       const result = response.data || response
       setSyncMessage(
-        `✓ Synced ${result.synced} new assignments from ${result.total_courses} courses (${result.skipped} skipped) - Refresh page to see new assignments`
+        `✓ Synced ${result.synced} new assignments from ${result.total_courses} courses (${result.skipped} skipped)`
       )
+      
+      // Automatically refetch assignments to show new data
+      await queryClient.invalidateQueries({ queryKey: assignmentKeys.lists() })
     } catch (error: any) {
       console.error('Sync failed - Full error:', error)
       console.error('Error message:', error?.message)
