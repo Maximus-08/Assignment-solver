@@ -36,12 +36,16 @@ export default function AssignmentsPage() {
       console.log('Sync response:', response)
       // The backend returns data directly, not wrapped in a data property
       const result = response.data || response
+      
+      // Invalidate and refetch all assignment queries
+      await queryClient.invalidateQueries({ 
+        queryKey: assignmentKeys.all,
+        refetchType: 'active'
+      })
+      
       setSyncMessage(
         `✓ Synced ${result.synced} new assignments from ${result.total_courses} courses (${result.skipped} skipped)`
       )
-      
-      // Automatically refetch assignments to show new data
-      await queryClient.invalidateQueries({ queryKey: assignmentKeys.lists() })
     } catch (error: any) {
       console.error('Sync failed - Full error:', error)
       console.error('Error message:', error?.message)

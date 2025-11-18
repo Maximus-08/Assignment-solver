@@ -9,6 +9,7 @@ passlib[bcrypt]==1.7.4
 python-multipart==0.0.6
 aiofiles==23.2.1
 httpx==0.25.2
+python-dotenv==1.0.0
 psutil==5.9.6
 sentry-sdk[fastapi]==1.38.0
 python-json-logger==2.0.7
