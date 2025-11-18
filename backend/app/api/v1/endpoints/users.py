@@ -60,8 +60,7 @@ async def get_user_google_credentials(
     Requires valid API key in X-API-Key header.
     """
     # Verify API key (from agent's BACKEND_API_KEY)
-    expected_key = "GZKtvr03TKU1QnPdCA8Js5e4eP0x/DYxoU5Zhy7TDWQ="  # The key we generated
-    if x_api_key != expected_key:
+    if not settings.BACKEND_API_KEY or x_api_key != settings.BACKEND_API_KEY:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API key"

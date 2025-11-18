@@ -187,8 +187,7 @@ async def create_assignment_solution_internal(
     """Internal endpoint for agent to upload solution (requires API key)"""
     try:
         # Validate API key
-        expected_key = "GZKtvr03TKU1QnPdCA8Js5e4eP0x/DYxoU5Zhy7TDWQ="
-        if x_api_key != expected_key:
+        if not settings.BACKEND_API_KEY or x_api_key != settings.BACKEND_API_KEY:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid API key"

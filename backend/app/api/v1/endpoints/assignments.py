@@ -221,8 +221,7 @@ async def get_assignment_internal(
     """Internal endpoint for agent to fetch assignment by ID (requires API key)"""
     try:
         # Validate API key
-        expected_key = "GZKtvr03TKU1QnPdCA8Js5e4eP0x/DYxoU5Zhy7TDWQ="
-        if x_api_key != expected_key:
+        if not settings.BACKEND_API_KEY or x_api_key != settings.BACKEND_API_KEY:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid API key"
@@ -251,14 +250,13 @@ async def get_assignment_internal(
 @router.put("/_internal/{assignment_id}/status", response_model=dict, include_in_schema=False)
 async def update_assignment_status_internal(
     assignment_id: str,
-    status_update: dict,
+    status_data: dict,
     x_api_key: str = Header(..., alias="X-API-Key")
 ):
     """Internal endpoint for agent to update assignment status (requires API key)"""
     try:
         # Validate API key
-        expected_key = "GZKtvr03TKU1QnPdCA8Js5e4eP0x/DYxoU5Zhy7TDWQ="
-        if x_api_key != expected_key:
+        if not settings.BACKEND_API_KEY or x_api_key != settings.BACKEND_API_KEY:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid API key"
