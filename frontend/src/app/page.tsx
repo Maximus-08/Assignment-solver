@@ -23,12 +23,12 @@ export default function Home() {
     }
   }, [status, router])
 
-  // Calculate stats from assignments data
+  // Calculate stats from assignments data (backend returns data directly)
   const stats = {
-    total: assignmentsData?.data?.total || 0,
-    completed: assignmentsData?.data?.assignments?.filter(a => a.status === 'completed').length || 0,
-    processing: assignmentsData?.data?.assignments?.filter(a => a.status === 'processing').length || 0,
-    pending: assignmentsData?.data?.assignments?.filter(a => a.status === 'pending').length || 0,
+    total: assignmentsData?.total || 0,
+    completed: assignmentsData?.assignments?.filter(a => a.status === 'completed').length || 0,
+    processing: assignmentsData?.assignments?.filter(a => a.status === 'processing').length || 0,
+    pending: assignmentsData?.assignments?.filter(a => a.status === 'pending').length || 0,
   }
 
   if (status === 'loading') {

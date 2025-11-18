@@ -31,9 +31,9 @@ export default function AssignmentList({
     sort: sortBy || undefined,
   })
 
-  // Extract from APIResponse wrapper
-  const assignments = data?.data?.assignments || []
-  const totalCount = data?.data?.total || 0
+  // Backend returns data directly (no wrapper)
+  const assignments = data?.assignments || []
+  const totalCount = data?.total || 0
   const totalPages = Math.ceil(totalCount / itemsPerPage)
 
   // Reset to page 1 when filters change
