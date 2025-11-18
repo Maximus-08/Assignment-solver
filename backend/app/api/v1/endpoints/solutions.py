@@ -410,7 +410,16 @@ async def run_agent_for_assignment(assignment_id: str, user_id: str):
         logger.info(f"Starting agent for assignment {assignment_id}, user {user_id}")
         
         # Get path to agent directory (backend/agent)
-        backend_dir = Path(__file__).parent.parent.parent.parent
+        # __file__ is at: backend/app/api/v1/endpoints/solutions.py
+        current_file = Path(__file__)
+        logger.info(f"Current file: {current_file}")
+        logger.info(f"Parent 1 (endpoints): {current_file.parent}")
+        logger.info(f"Parent 2 (v1): {current_file.parent.parent}")
+        logger.info(f"Parent 3 (api): {current_file.parent.parent.parent}")
+        logger.info(f"Parent 4 (app): {current_file.parent.parent.parent.parent}")
+        logger.info(f"Parent 5 (backend): {current_file.parent.parent.parent.parent.parent}")
+        
+        backend_dir = current_file.parent.parent.parent.parent.parent
         agent_dir = backend_dir / "agent"
         
         # Use system Python executable
