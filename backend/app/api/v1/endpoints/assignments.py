@@ -50,7 +50,7 @@ class SearchResponse(BaseModel):
     query: str
     total: int
 
-@router.get("/", response_model=AssignmentListResponse)
+@router.get("/", response_model=Dict[str, Any])
 async def get_assignments(
     page: int = Query(1, ge=1, description="Page number"),
     per_page: int = Query(20, ge=1, le=100, description="Items per page"),
@@ -110,14 +110,18 @@ async def get_assignments(
         logger.info(f"Query: user_id={user_id_str}, Found {len(assignments)} assignments (total {total_count})")
         logger.info(f"User object ID type: {type(current_user.id)}, value: {current_user.id}")
         
-        return AssignmentListResponse(
-            assignments=assignments,
-            total=total_count,
-            page=page,
-            per_page=per_page,
-            has_next=(skip + per_page) < total_count,
-            has_prev=page > 1
-        )
+        response_data = {
+            "assignments": assignments,
+            "total": total_count,
+            "page": page,
+            "per_page": per_page,
+            "has_next": (skip + per_page) < total_count,
+            "has_prev": page > 1
+        }
+        
+        logger.info(f"Returning response with {len(assignments)} assignments")
+        
+        return response_data
         
     except Exception as e:
         raise HTTPException(
