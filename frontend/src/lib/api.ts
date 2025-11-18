@@ -101,7 +101,7 @@ class APIClient {
     search?: string
     subject?: string
     sort?: string
-  }): Promise<APIResponse<{ assignments: Assignment[]; total: number; page: number; pages: number }>> {
+  }): Promise<{ assignments: Assignment[]; total: number; page: number; per_page: number; has_next: boolean; has_prev: boolean }> {
     const searchParams = new URLSearchParams()
     
     if (params?.page) searchParams.append('page', params.page.toString())
@@ -113,7 +113,7 @@ class APIClient {
     const query = searchParams.toString()
     const endpoint = `/api/v1/assignments${query ? `?${query}` : ''}`
     
-    return this.request<APIResponse<{ assignments: Assignment[]; total: number; page: number; pages: number }>>(endpoint)
+    return this.request<{ assignments: Assignment[]; total: number; page: number; per_page: number; has_next: boolean; has_prev: boolean }>(endpoint)
   }
 
   async getAssignment(id: string): Promise<Assignment> {
