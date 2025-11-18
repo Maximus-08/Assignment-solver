@@ -136,6 +136,12 @@ class APIClient {
     })
   }
 
+  async resetAssignmentStatus(assignmentId: string): Promise<{message: string; assignment_id: string; status: string}> {
+    return this.request<{message: string; assignment_id: string; status: string}>(`/api/v1/assignments/${assignmentId}/reset-status`, {
+      method: 'POST'
+    })
+  }
+
   // Generic get/post methods for flexibility
   async get<T = any>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint)

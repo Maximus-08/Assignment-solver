@@ -347,28 +347,54 @@ export default function AssignmentPage() {
               >
                 View Solution
               </button>
-            ) : assignment.status !== 'processing' && (
-              <button
-                onClick={handleSolveAssignment}
-                disabled={solving}
-                className="ml-4 px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white rounded-md text-sm font-medium flex items-center gap-2"
-              >
-                {solving ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Solving...
-                  </>
-                ) : (
-                  <>
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                    Solve with AI
-                  </>
+            ) : assignment.status !== 'processing' ? (
+              <>
+                <button
+                  onClick={assignment.status === 'failed' ? handleRegenerateSolution : handleSolveAssignment}
+                  disabled={solving}
+                  className="ml-4 px-4 py-2 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white rounded-md text-sm font-medium flex items-center gap-2"
+                >
+                  {solving ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {assignment.status === 'failed' ? 'Retrying...' : 'Solving...'}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      {assignment.status === 'failed' ? 'Retry with AI' : 'Solve with AI'}
+                    </>
+                  )}
+                </button>
+                {assignment.status === 'failed' && (
+                  <span className="ml-2 text-xs text-gray-400">(Previous attempt failed)</span>
                 )}
+              </>
+            ) : (
+              <button
+                onClick={async () => {
+                  if (confirm('This assignment appears stuck in processing. Reset it to try again?')) {
+                    try {
+                      const { apiClient } = await import('@/lib/api')
+                      await apiClient.resetAssignmentStatus(assignmentId)
+                      // Refresh the page
+                      window.location.reload()
+                    } catch (err: any) {
+                      setError(`Failed to reset: ${err?.message || 'Unknown error'}`)
+                    }
+                  }
+                }}
+                className="ml-4 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-md text-sm font-medium flex items-center gap-2"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Reset Status
               </button>
             )}
           </div>

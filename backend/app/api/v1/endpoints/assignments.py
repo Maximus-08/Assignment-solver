@@ -289,6 +289,51 @@ async def update_assignment_status_internal(
             detail=f"Failed to update assignment status: {str(e)}"
         )
 
+@router.post("/{assignment_id}/reset-status")
+async def reset_assignment_status(
+    assignment_id: str,
+    current_user: UserModel = Depends(get_current_user)
+):
+    """Reset assignment status to pending (useful for stuck assignments)"""
+    try:
+        assignment_repo = AssignmentRepository()
+        
+        # Check if assignment exists and user owns it
+        existing_assignment = await assignment_repo.get_by_id(assignment_id)
+        if not existing_assignment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Assignment not found"
+            )
+        
+        if existing_assignment["user_id"] != str(current_user.id):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied to this assignment"
+            )
+        
+        # Reset status to pending
+        await assignment_repo.update(assignment_id, {
+            "status": "pending",
+            "updated_at": datetime.utcnow()
+        })
+        
+        logger.info(f"Reset assignment {assignment_id} status to pending")
+        
+        return {
+            "message": "Assignment status reset to pending",
+            "assignment_id": assignment_id,
+            "status": "pending"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to reset assignment status: {str(e)}"
+        )
+
 @router.post("/", response_model=AssignmentResponse)
 async def create_assignment(
     assignment_create: AssignmentCreate,
