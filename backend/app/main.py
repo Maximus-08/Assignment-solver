@@ -29,7 +29,13 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Set up CORS
+# Add request logging middleware (first)
+app.add_middleware(RequestLoggingMiddleware)
+
+# Add request validation middleware
+app.add_middleware(RequestValidationMiddleware)
+
+# Set up CORS (must be last to be executed first)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
@@ -38,12 +44,6 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
     expose_headers=["Content-Type", "Authorization"],
 )
-
-# Add request validation middleware
-app.add_middleware(RequestValidationMiddleware)
-
-# Add request logging middleware
-app.add_middleware(RequestLoggingMiddleware)
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
