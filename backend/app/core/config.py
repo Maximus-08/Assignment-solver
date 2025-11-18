@@ -22,9 +22,14 @@ class Settings(BaseSettings):
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v):
-        if isinstance(v, str) and not v.startswith("["):
+        if isinstance(v, str):
+            # If it looks like JSON array, parse it
+            if v.startswith("["):
+                import json
+                return json.loads(v)
+            # Otherwise treat as comma-separated
             return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
+        elif isinstance(v, list):
             return v
         raise ValueError(v)
     
