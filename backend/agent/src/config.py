@@ -17,8 +17,8 @@ class Settings(BaseModel):
     GEMINI_API_KEY: Optional[str] = None
     GEMINI_MODEL: str = "gemini-2.0-flash"
     
-    # Backend API (for Render deployment, use internal URL)
-    BACKEND_API_URL: str = "http://localhost:8000"
+    # Backend API - auto-detect port from environment
+    BACKEND_API_URL: str = f"http://localhost:{os.getenv('PORT', '8000')}"
     BACKEND_API_KEY: Optional[str] = None
     
     # Scheduling
@@ -81,13 +81,17 @@ load_dotenv()
 
 def create_settings() -> Settings:
     """Create settings instance with environment variable loading"""
+    # Get port from environment (Render sets this)
+    port = os.getenv('PORT', '8000')
+    default_backend_url = f"http://localhost:{port}"
+    
     try:
         return Settings(
             GOOGLE_CREDENTIALS_FILE=os.getenv("GOOGLE_CREDENTIALS_FILE"),
             GOOGLE_TOKEN_FILE=os.getenv("GOOGLE_TOKEN_FILE"),
             GEMINI_API_KEY=os.getenv("GEMINI_API_KEY"),
             GEMINI_MODEL=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
-            BACKEND_API_URL=os.getenv("BACKEND_API_URL", "http://localhost:8000"),
+            BACKEND_API_URL=os.getenv("BACKEND_API_URL", default_backend_url),
             BACKEND_API_KEY=os.getenv("BACKEND_API_KEY"),
             SYNC_SCHEDULE_CRON=os.getenv("SYNC_SCHEDULE_CRON", "0 8 * * *"),
             LOG_LEVEL=os.getenv("LOG_LEVEL", "INFO"),
@@ -99,9 +103,10 @@ def create_settings() -> Settings:
         # Fallback to basic settings if validation fails
         print(f"Warning: Settings validation failed: {e}")
         # Return minimal settings without Google credentials file
+        port = os.getenv('PORT', '8000')
         return Settings(
             GEMINI_API_KEY=os.getenv("GEMINI_API_KEY"),
-            BACKEND_API_URL=os.getenv("BACKEND_API_URL", "http://localhost:8000"),
+            BACKEND_API_URL=os.getenv("BACKEND_API_URL", f"http://localhost:{port}"),
             BACKEND_API_KEY=os.getenv("BACKEND_API_KEY"),
         )
         return Settings()
