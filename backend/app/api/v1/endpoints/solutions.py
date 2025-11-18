@@ -12,6 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 from app.core.logging import get_logger
+from app.core.config import settings
 from datetime import datetime
 
 router = APIRouter()

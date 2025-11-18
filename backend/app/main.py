@@ -36,13 +36,16 @@ app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(RequestValidationMiddleware)
 
 # Set up CORS (must be last to be executed first)
+# Log CORS origins for debugging
+logger.info(f"CORS Origins configured: {settings.BACKEND_CORS_ORIGINS}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
-    expose_headers=["Content-Type", "Authorization"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # Include API router
