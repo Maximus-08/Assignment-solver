@@ -274,7 +274,7 @@ async def update_assignment_status_internal(
         
         # Update status
         update_data = {
-            "status": status_update.get("status"),
+            "status": status_data.get("status"),
             "updated_at": datetime.utcnow()
         }
         await assignment_repo.update(assignment_id, update_data)
