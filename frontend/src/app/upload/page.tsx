@@ -31,8 +31,8 @@ export default function UploadPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Upload Assignment</h1>
-        <p className="text-gray-600 mt-2">
+        <h1 className="text-3xl font-bold text-white">Upload Assignment</h1>
+        <p className="text-gray-300 mt-2">
           Upload an assignment manually to get AI-powered solutions and explanations
         </p>
       </div>

@@ -61,10 +61,10 @@ export default function AssignmentCard({ assignment }: AssignmentCardProps) {
         </div>
 
         {/* Title and Description */}
-        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+        <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 h-14">
           {assignment.title}
         </h3>
-        <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+        <p className="text-sm text-gray-600 mb-4 line-clamp-3 h-16">
           {assignment.description}
         </p>
 
