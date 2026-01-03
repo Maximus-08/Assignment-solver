@@ -165,49 +165,6 @@ class APIClient {
     })
   }
 
-  async uploadAttachment(assignmentId: string, file: File): Promise<APIResponse<any>> {
-    const formData = new FormData()
-    formData.append('file', file)
-
-    // Get session token for auth
-    const session = await getSession()
-    const headers: Record<string, string> = {}
-    
-    if (session?.backendToken) {
-      headers['Authorization'] = `Bearer ${session.backendToken}`
-    }
-
-    const url = `${this.baseURL}/api/v1/assignments/${assignmentId}/attachments`
-    const response = await fetch(url, {
-      method: 'POST',
-      headers,
-      body: formData,
-      credentials: 'include',
-    })
-
-    if (!response.ok) {
-      let errorData: ErrorResponse
-      try {
-        errorData = await response.json()
-      } catch {
-        errorData = {
-          error_code: 'UNKNOWN_ERROR',
-          message: `HTTP ${response.status}: ${response.statusText}`,
-          timestamp: new Date().toISOString(),
-        }
-      }
-      
-      throw new APIError(
-        errorData.message,
-        response.status,
-        errorData.error_code,
-        errorData.details
-      )
-    }
-
-    return response.json()
-  }
-
   async updateAssignment(id: string, data: Partial<Assignment>): Promise<APIResponse<Assignment>> {
     return this.request<APIResponse<Assignment>>(`/api/v1/assignments/${id}`, {
       method: 'PUT',

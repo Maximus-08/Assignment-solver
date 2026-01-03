@@ -226,12 +226,28 @@ async def create_assignment_solution_internal(
         # Create the solution
         solution_id = await solution_repo.create_solution(solution_dict)
         
-        # Return created solution
+        # Return created solution with properly serialized ObjectIds
         created_solution = await solution_repo.get_by_id(solution_id)
-        created_solution["id"] = str(created_solution["_id"])
-        created_solution["assignment_id"] = str(created_solution["assignment_id"])
         
-        return created_solution
+        # Convert all ObjectId fields to strings for JSON serialization
+        response_dict = {
+            "id": str(created_solution["_id"]),
+            "assignment_id": str(created_solution["assignment_id"]),
+            "content": created_solution.get("content", ""),
+            "explanation": created_solution.get("explanation", ""),
+            "step_by_step": created_solution.get("step_by_step", []),
+            "reasoning": created_solution.get("reasoning", ""),
+            "generated_by": created_solution.get("generated_by", ""),
+            "ai_model_used": created_solution.get("ai_model_used", ""),
+            "confidence_score": created_solution.get("confidence_score", 0.0),
+            "processing_time": created_solution.get("processing_time", 0.0),
+            "subject_area": created_solution.get("subject_area", ""),
+            "quality_validated": created_solution.get("quality_validated", False),
+            "created_at": created_solution.get("created_at", datetime.utcnow()).isoformat() if isinstance(created_solution.get("created_at"), datetime) else str(created_solution.get("created_at", "")),
+            "feedback_rating": created_solution.get("feedback_rating")
+        }
+        
+        return response_dict
         
     except HTTPException:
         raise

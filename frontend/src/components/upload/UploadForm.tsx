@@ -156,7 +156,7 @@ export default function UploadForm() {
       })
 
       console.log('Create assignment response:', response)
-      const assignmentId = response.id || response.data?.id
+      const assignmentId = (response as any).id || response.data?.id
       
       if (!assignmentId) {
         throw new Error('No assignment ID returned from server')
@@ -224,7 +224,7 @@ export default function UploadForm() {
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Upload Successful!</h2>
         <p className="text-gray-600 mb-6">
-          Your assignment has been uploaded and is being processed by our AI. You'll be redirected to view the results shortly.
+          Your assignment has been uploaded and is being processed by our AI. You&apos;ll be redirected to view the results shortly.
         </p>
         <div className="space-x-4">
           <button

@@ -148,7 +148,7 @@ export default function AssignmentDetails({ assignment }: AssignmentDetailsProps
                     </svg>
                     <div>
                       <span className="text-xs text-gray-500">Type:</span>
-                      <span className="text-sm text-gray-900 ml-1 capitalize">{assignment.assignment_type.replace('_', ' ')}</span>
+                      <span className="text-sm text-gray-900 ml-1 capitalize">{assignment.assignment_type?.replace('_', ' ') || 'N/A'}</span>
                     </div>
                   </div>
                 )}

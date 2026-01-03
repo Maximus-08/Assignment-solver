@@ -236,7 +236,7 @@ export default function AssignmentPage() {
             </svg>
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">Assignment not found</h3>
-          <p className="text-gray-600 mb-4">The assignment you're looking for doesn't exist or has been removed.</p>
+          <p className="text-gray-600 mb-4">The assignment you&apos;re looking for doesn&apos;t exist or has been removed.</p>
           <Link
             href="/assignments"
             className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium"

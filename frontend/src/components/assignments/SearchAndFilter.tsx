@@ -103,7 +103,7 @@ export default function SearchAndFilter({
           <span className="text-sm text-gray-600">Active filters:</span>
           {searchQuery && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800">
-              Search: "{searchQuery}"
+              Search: &quot;{searchQuery}&quot;
               <button
                 onClick={() => onSearchChange('')}
                 className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full text-primary-400 hover:bg-primary-200 hover:text-primary-500"

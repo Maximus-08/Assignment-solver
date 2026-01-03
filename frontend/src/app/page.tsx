@@ -67,7 +67,7 @@ export default function Home() {
           Welcome back, {session.user?.name}!
         </h1>
         <p className="text-gray-300 mt-2">
-          Here's your assignment dashboard
+          Here&apos;s your assignment dashboard
         </p>
       </div>
 
