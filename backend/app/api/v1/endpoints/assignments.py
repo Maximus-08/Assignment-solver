@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, status, Depends, Query, UploadFile, File, Header
+from fastapi import APIRouter, HTTPException, status as http_status, Depends, Query, UploadFile, File, Header
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from datetime import datetime
@@ -29,7 +29,7 @@ class AssignmentResponse(BaseModel):
     course_name: str
     instructor: Optional[str]
     due_date: Optional[datetime]
-    upload_date: datetime
+    upload_date: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
     source: AssignmentSource
@@ -124,8 +124,9 @@ async def get_assignments(
         return response_data
         
     except Exception as e:
+        logger.error(f"Failed to retrieve assignments: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve assignments: {str(e)}"
         )
 
@@ -133,39 +134,47 @@ async def get_assignments(
 async def cleanup_duplicates(
     current_user: UserModel = Depends(get_current_user)
 ):
-    """Remove duplicate assignments based on google_classroom_id"""
+    """Remove duplicate assignments, keeping only the oldest one for each unique assignment"""
     try:
         assignment_repo = AssignmentRepository()
         collection = await assignment_repo.get_collection()
         
-        # Find duplicates
-        pipeline = [
-            {"$match": {"user_id": str(current_user.id), "google_classroom_id": {"$exists": True}}},
-            {"$group": {
-                "_id": "$google_classroom_id",
-                "count": {"$sum": 1},
-                "ids": {"$push": "$_id"}
-            }},
-            {"$match": {"count": {"$gt": 1}}}
-        ]
+        # Get ALL assignments for this user
+        all_assignments = await collection.find({
+            "user_id": str(current_user.id)
+        }).sort("created_at", 1).to_list(length=None)
         
-        duplicates = await collection.aggregate(pipeline).to_list(length=None)
+        logger.info(f"Found {len(all_assignments)} total assignments for user {current_user.id}")
         
-        deleted_count = 0
-        for dup in duplicates:
-            # Keep the first one, delete the rest
-            ids_to_delete = dup["ids"][1:]
+        # Group by title
+        seen_titles = {}
+        ids_to_delete = []
+        
+        for assignment in all_assignments:
+            title = assignment.get("title", "")
+            if title in seen_titles:
+                # This is a duplicate, mark for deletion
+                ids_to_delete.append(assignment["_id"])
+                logger.info(f"Marking duplicate for deletion: {assignment['_id']} (title: {title}, source: {assignment.get('source', 'unknown')})")
+            else:
+                # First time seeing this title, keep it
+                seen_titles[title] = assignment["_id"]
+        
+        # Delete all duplicates
+        total_deleted = 0
+        if ids_to_delete:
             result = await collection.delete_many({"_id": {"$in": ids_to_delete}})
-            deleted_count += result.deleted_count
+            total_deleted = result.deleted_count
+            logger.info(f"Cleaned {total_deleted} duplicate assignments for user {current_user.id}")
         
         return {
-            "message": f"Cleaned up {deleted_count} duplicate assignments",
-            "duplicate_groups": len(duplicates)
+            "message": f"Cleaned up {total_deleted} duplicate assignments",
+            "deleted_count": total_deleted
         }
     except Exception as e:
         logger.error(f"Error cleaning duplicates: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to cleanup duplicates: {str(e)}"
         )
 
@@ -223,7 +232,7 @@ async def get_assignment_internal(
         # Validate API key
         if not settings.BACKEND_API_KEY or x_api_key != settings.BACKEND_API_KEY:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=http_status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid API key"
             )
         
@@ -232,7 +241,7 @@ async def get_assignment_internal(
         
         if not assignment_data:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
@@ -243,7 +252,7 @@ async def get_assignment_internal(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve assignment: {str(e)}"
         )
 
@@ -258,7 +267,7 @@ async def update_assignment_status_internal(
         # Validate API key
         if not settings.BACKEND_API_KEY or x_api_key != settings.BACKEND_API_KEY:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=http_status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid API key"
             )
         
@@ -268,7 +277,7 @@ async def update_assignment_status_internal(
         existing_assignment = await assignment_repo.get_by_id(assignment_id)
         if not existing_assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
@@ -285,7 +294,7 @@ async def update_assignment_status_internal(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update assignment status: {str(e)}"
         )
 
@@ -343,13 +352,63 @@ async def create_assignment(
     try:
         assignment_repo = AssignmentRepository()
         
-        # Prepare assignment data
-        assignment_data = assignment_create.dict()
+        # Always run cleanup on manual uploads to remove any existing duplicates
+        logger.info(f"Running duplicate cleanup for user {current_user.id}")
+        collection = await assignment_repo.get_collection()
+        
+        # Get ALL assignments for this user (not just MANUAL_UPLOAD)
+        all_assignments = await collection.find({
+            "user_id": str(current_user.id)
+        }).sort("created_at", 1).to_list(length=None)
+        
+        logger.info(f"Found {len(all_assignments)} total assignments")
+        
+        # Group by title
+        seen_titles = {}
+        ids_to_delete = []
+        
+        for assignment in all_assignments:
+            title = assignment.get("title", "")
+            if title in seen_titles:
+                # This is a duplicate, mark for deletion
+                ids_to_delete.append(assignment["_id"])
+                logger.info(f"Marking duplicate for deletion: {assignment['_id']} (title: {title}, source: {assignment.get('source', 'unknown')})")
+            else:
+                # First time seeing this title, keep it
+                seen_titles[title] = assignment["_id"]
+        
+        # Delete all duplicates
+        if ids_to_delete:
+            result = await collection.delete_many({"_id": {"$in": ids_to_delete}})
+            logger.info(f"Auto-cleaned {result.deleted_count} duplicate assignments for user {current_user.id}")
+        else:
+            logger.info(f"No duplicates found to clean for user {current_user.id}")
+        
+        # Check for duplicate assignment (within last 5 minutes)
+        existing = await assignment_repo.find_duplicate(
+            user_id=str(current_user.id),
+            title=assignment_create.title,
+            description=assignment_create.description or "",
+            subject=assignment_create.subject,
+            minutes=5
+        )
+        
+        if existing:
+            logger.info(f"Duplicate assignment detected for user {current_user.id}, returning existing assignment {existing['_id']}")
+            existing["id"] = str(existing["_id"])
+            return AssignmentResponse(**existing)
+        
+        # Prepare assignment data - use model_dump() instead of dict() for Pydantic v2
+        assignment_data = assignment_create.model_dump()
+        now = datetime.utcnow()
         assignment_data.update({
             "user_id": str(current_user.id),
             "source": AssignmentSource.MANUAL_UPLOAD,
             "status": AssignmentStatus.PENDING,
-            "attachments": []
+            "attachments": [],
+            "upload_date": now,
+            "created_at": now,
+            "updated_at": now
         })
         
         # Create assignment
@@ -362,6 +421,7 @@ async def create_assignment(
         return AssignmentResponse(**created_assignment)
         
     except Exception as e:
+        logger.error(f"Failed to create assignment: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create assignment: {str(e)}"

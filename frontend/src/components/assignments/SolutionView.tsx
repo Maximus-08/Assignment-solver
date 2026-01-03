@@ -9,6 +9,18 @@ interface SolutionViewProps {
   isRegenerating?: boolean
 }
 
+// Clean markdown formatting from text
+const cleanMarkdown = (text: string): string => {
+  if (!text) return text
+  return text
+    .replace(/\*\*\*(.+?)\*\*\*/g, '$1')  // Remove triple asterisks
+    .replace(/\*\*(.+?)\*\*/g, '$1')      // Remove bold markdown
+    .replace(/\*(.+?)\*/g, '$1')          // Remove italic markdown
+    .replace(/_{3}(.+?)_{3}/g, '$1')      // Remove triple underscores
+    .replace(/__(.+?)__/g, '$1')          // Remove double underscores
+    .replace(/_(.+?)_/g, '$1')            // Remove single underscores
+}
+
 export default function SolutionView({ solution, onRegenerate, isRegenerating = false }: SolutionViewProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'steps' | 'reasoning'>('overview')
   const [feedbackRating, setFeedbackRating] = useState(solution.feedback_rating || 0)
@@ -120,14 +132,14 @@ export default function SolutionView({ solution, onRegenerate, isRegenerating = 
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Solution Overview</h3>
               <div className="prose prose-sm max-w-none text-gray-700">
-                <p className="whitespace-pre-wrap">{solution.content}</p>
+                <p className="whitespace-pre-wrap">{cleanMarkdown(solution.content)}</p>
               </div>
             </div>
             
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Explanation</h3>
               <div className="prose prose-sm max-w-none text-gray-700">
-                <p className="whitespace-pre-wrap">{solution.explanation || 'No detailed explanation available.'}</p>
+                <p className="whitespace-pre-wrap">{cleanMarkdown(solution.explanation || 'No detailed explanation available.')}</p>
               </div>
             </div>
 
@@ -182,11 +194,11 @@ export default function SolutionView({ solution, onRegenerate, isRegenerating = 
                     }`}
                   >
                     <div className={`${isHeader ? 'font-semibold text-blue-900' : 'text-gray-800'}`}>
-                      {stepText}
+                      {cleanMarkdown(stepText)}
                     </div>
                     {explanation && (
                       <div className="mt-2 text-sm text-gray-600 ml-4">
-                        {explanation}
+                        {cleanMarkdown(explanation)}
                       </div>
                     )}
                   </div>
@@ -209,7 +221,7 @@ export default function SolutionView({ solution, onRegenerate, isRegenerating = 
                     }`}
                   >
                     <div className={`${isHeader ? 'font-semibold text-blue-900' : 'text-gray-800'}`}>
-                      {step}
+                      {cleanMarkdown(step)}
                     </div>
                   </div>
                 )
@@ -225,7 +237,7 @@ export default function SolutionView({ solution, onRegenerate, isRegenerating = 
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Reasoning & Methodology</h3>
             <div className="prose prose-sm max-w-none text-gray-700">
-              <p className="whitespace-pre-wrap">{solution.reasoning || 'No reasoning details available.'}</p>
+              <p className="whitespace-pre-wrap">{cleanMarkdown(solution.reasoning || 'No reasoning details available.')}</p>
             </div>
             
             <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">

@@ -15,7 +15,7 @@ class Settings(BaseModel):
     
     # Google Gemini API
     GEMINI_API_KEY: Optional[str] = None
-    GEMINI_MODEL: str = "gemini-2.0-flash"
+    GEMINI_MODEL: str = "gemini-2.5-flash"
     
     # Backend API - auto-detect port from environment
     BACKEND_API_URL: str = f"http://localhost:{os.getenv('PORT', '8000')}"

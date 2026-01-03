@@ -136,23 +136,44 @@ export default function UploadForm() {
     setUploadStatus('uploading')
 
     try {
-      // Use the real API client
+      // Check if user is authenticated
+      const { getSession } = await import('next-auth/react')
+      const session = await getSession()
+      
+      if (!session) {
+        alert('You must be logged in to upload assignments. Please sign in first.')
+        setUploadStatus('error')
+        setIsSubmitting(false)
+        router.push('/auth/signin')
+        return
+      }
+
+      // Step 1: Create the assignment (JSON only, no files)
       const response = await apiClient.createAssignment({
         title: formData.title,
         description: formData.description,
         subject: formData.subject || undefined,
-        attachments: formData.files,
       })
 
-      // Simulate progress for user feedback
-      setUploadProgress(50)
+      console.log('Create assignment response:', response)
+      const assignmentId = response.id || response.data?.id
       
-      const assignmentId = response.data.id
-      setUploadStatus('processing')
-      setUploadProgress(100)
+      if (!assignmentId) {
+        throw new Error('No assignment ID returned from server')
+      }
       
-      // Small delay for UX
-      await new Promise(resolve => setTimeout(resolve, 500))
+      setUploadProgress(30)
+      
+      // Step 2: Upload files if any
+      if (formData.files.length > 0) {
+        setUploadStatus('processing')
+        for (let i = 0; i < formData.files.length; i++) {
+          await apiClient.uploadAttachment(assignmentId, formData.files[i])
+          setUploadProgress(30 + ((i + 1) / formData.files.length) * 70)
+        }
+      } else {
+        setUploadProgress(100)
+      }
       
       setUploadStatus('success')
       setUploadedAssignmentId(assignmentId)
@@ -161,9 +182,19 @@ export default function UploadForm() {
       setTimeout(() => {
         router.push(`/assignments/${assignmentId}`)
       }, 2000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload failed:', error)
+      console.error('Error details:', {
+        message: error?.message,
+        status: error?.status,
+        code: error?.code,
+        details: error?.details
+      })
       setUploadStatus('error')
+      // Show more detailed error to user
+      if (error?.message) {
+        alert(`Upload failed: ${error.message}`)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -234,7 +265,7 @@ export default function UploadForm() {
             id="title"
             value={formData.title}
             onChange={(e) => handleInputChange('title', e.target.value)}
-            className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${
+            className={`block w-full px-3 py-2 border rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 ${
               errors.title
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                 : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500'
@@ -260,7 +291,7 @@ export default function UploadForm() {
             rows={6}
             value={formData.description}
             onChange={(e) => handleInputChange('description', e.target.value)}
-            className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${
+            className={`block w-full px-3 py-2 border rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 ${
               errors.description
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                 : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500'
@@ -287,7 +318,7 @@ export default function UploadForm() {
               id="subject"
               value={formData.subject}
               onChange={(e) => handleInputChange('subject', e.target.value)}
-              className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-1 ${
+              className={`block w-full px-3 py-2 border rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-1 ${
                 errors.subject
                   ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                   : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500'
@@ -316,7 +347,7 @@ export default function UploadForm() {
               id="dueDate"
               value={formData.dueDate}
               onChange={(e) => handleInputChange('dueDate', e.target.value)}
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-1 focus:border-primary-500 focus:ring-primary-500"
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-1 focus:border-primary-500 focus:ring-primary-500"
               disabled={isSubmitting}
             />
           </div>

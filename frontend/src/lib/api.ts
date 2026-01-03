@@ -155,25 +155,57 @@ class APIClient {
   }
 
   async createAssignment(data: ManualUploadData): Promise<APIResponse<Assignment>> {
-    const formData = new FormData()
-    formData.append('title', data.title)
-    formData.append('description', data.description)
-    if (data.subject) formData.append('subject', data.subject)
-    
-    // Add files
-    if (data.attachments) {
-      data.attachments.forEach((file, index) => {
-        formData.append(`attachments`, file)
-      })
-    }
-
     return this.request<APIResponse<Assignment>>('/api/v1/assignments', {
       method: 'POST',
-      headers: {
-        // Don't set Content-Type for FormData, let browser set it with boundary
-      },
-      body: formData,
+      body: JSON.stringify({
+        title: data.title,
+        description: data.description,
+        subject: data.subject || 'General'
+      }),
     })
+  }
+
+  async uploadAttachment(assignmentId: string, file: File): Promise<APIResponse<any>> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    // Get session token for auth
+    const session = await getSession()
+    const headers: Record<string, string> = {}
+    
+    if (session?.backendToken) {
+      headers['Authorization'] = `Bearer ${session.backendToken}`
+    }
+
+    const url = `${this.baseURL}/api/v1/assignments/${assignmentId}/attachments`
+    const response = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include',
+    })
+
+    if (!response.ok) {
+      let errorData: ErrorResponse
+      try {
+        errorData = await response.json()
+      } catch {
+        errorData = {
+          error_code: 'UNKNOWN_ERROR',
+          message: `HTTP ${response.status}: ${response.statusText}`,
+          timestamp: new Date().toISOString(),
+        }
+      }
+      
+      throw new APIError(
+        errorData.message,
+        response.status,
+        errorData.error_code,
+        errorData.details
+      )
+    }
+
+    return response.json()
   }
 
   async updateAssignment(id: string, data: Partial<Assignment>): Promise<APIResponse<Assignment>> {
@@ -186,6 +218,12 @@ class APIClient {
   async deleteAssignment(id: string): Promise<APIResponse<{}>> {
     return this.request<APIResponse<{}>>(`/api/v1/assignments/${id}`, {
       method: 'DELETE',
+    })
+  }
+
+  async cleanupDuplicates(): Promise<{ message: string; google_classroom_duplicates: number; manual_upload_duplicates: number }> {
+    return this.request<{ message: string; google_classroom_duplicates: number; manual_upload_duplicates: number }>('/api/v1/assignments/cleanup-duplicates', {
+      method: 'POST',
     })
   }
 

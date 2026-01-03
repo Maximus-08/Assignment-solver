@@ -100,9 +100,10 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             return response
             
         except Exception as e:
-            logger.error(f"Request {request_id} failed: {str(e)}")
+            logger.error(f"Request {request_id} failed: {str(e)}", exc_info=True)
+            from fastapi import status as http_status
             return JSONResponse(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={
                     "detail": "Internal server error",
                     "request_id": request_id

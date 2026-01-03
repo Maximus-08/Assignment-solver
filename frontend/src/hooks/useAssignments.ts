@@ -38,7 +38,8 @@ export function useAssignment(id: string) {
     queryKey: assignmentKeys.detail(id),
     queryFn: () => apiClient.getAssignment(id),
     enabled: !!id,
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
     retry: (failureCount, error) => {
       if (error instanceof APIError && error.status === 404) {
         return false // Don't retry not found errors
