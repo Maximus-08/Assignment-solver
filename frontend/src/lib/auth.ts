@@ -27,7 +27,11 @@ export const authOptions: NextAuthOptions = {
         // Send Google tokens to backend
         try {
           console.log('Syncing tokens with backend...');
-          const response = await fetch(`${process.env.BACKEND_API_URL || 'http://localhost:8000'}/api/v1/auth/google/token`, {
+          const backendUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000';
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+          
+          const response = await fetch(`${backendUrl}/api/v1/auth/google/token`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -38,7 +42,10 @@ export const authOptions: NextAuthOptions = {
               refresh_token: account.refresh_token,
               expires_in: account.expires_at ? (account.expires_at - Math.floor(Date.now() / 1000)) : 3600,
             }),
+            signal: controller.signal,
           });
+          
+          clearTimeout(timeoutId);
           
           if (response.ok) {
             const data = await response.json();
@@ -49,7 +56,8 @@ export const authOptions: NextAuthOptions = {
             console.error('Backend auth failed:', response.status, errorText);
           }
         } catch (error) {
-          console.error('Failed to sync with backend:', error);
+          console.error('Failed to sync with backend (non-critical):', error);
+          // Continue anyway - backend sync is optional
         }
       }
       return token
