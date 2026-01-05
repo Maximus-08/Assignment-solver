@@ -3,5 +3,14 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm install",
-  "devCommand": "npm run dev"
+  "devCommand": "npm run dev",
+  "functions": {
+    "src/app/api/**/*.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "NEXT_PUBLIC_BACKEND_API_URL": "@next_public_backend_api_url",
+    "BACKEND_API_URL": "@backend_api_url"
+  }
 }

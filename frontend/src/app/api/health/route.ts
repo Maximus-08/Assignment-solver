@@ -27,7 +27,8 @@ export async function GET(request: NextRequest) {
         headers: {
           'Content-Type': 'application/json',
         },
-        // Short timeout for health checks
+        // Short timeout for health checks to prevent build timeouts
+        signal: AbortSignal.timeout(5000), // 5 second timeout
         signal: AbortSignal.timeout(5000),
       })
       

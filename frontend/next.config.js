@@ -11,10 +11,14 @@ const nextConfig = {
     BACKEND_API_URL: process.env.BACKEND_API_URL || 'http://localhost:8000',
     NEXT_PUBLIC_BACKEND_API_URL: process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000',
   },
-  // Production optimizations
-  output: 'standalone',
+  // Production optimizations - remove standalone for Vercel
+  // output: 'standalone',  // This causes issues with Vercel deployment
   experimental: {
     outputFileTracingRoot: undefined,
+  },
+  // Increase timeout for API routes
+  async rewrites() {
+    return []
   },
   // Security headers for production
   async headers() {

@@ -48,6 +48,8 @@ class APIClient {
       ...options,
       headers,
       credentials: 'include',
+      // Add timeout to prevent hanging requests during build
+      signal: options.signal || AbortSignal.timeout(30000), // 30 second timeout
     }
 
     try {

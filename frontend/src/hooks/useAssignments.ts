@@ -28,6 +28,11 @@ export function useAssignments(params?: {
       if (error instanceof APIError && error.status >= 400 && error.status < 500) {
         return false // Don't retry client errors
       }
+      return failureCount < 2 // Only retry twice for other errors
+    },
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    enabled: typeof window !== 'undefined', // Only run on client side
+  })
       return failureCount < 3
     },
   })

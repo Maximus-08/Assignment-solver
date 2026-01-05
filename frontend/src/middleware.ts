@@ -10,11 +10,14 @@ export default withAuth(
         // Protect all routes except auth pages and home
         const { pathname } = req.nextUrl
         
-        // Allow access to auth pages and home without authentication
+        // Allow access to these pages without authentication
         if (
           pathname.startsWith('/auth') ||
           pathname === '/' ||
-          pathname.startsWith('/api/auth')
+          pathname.startsWith('/api/auth') ||
+          pathname.startsWith('/api/health') ||
+          pathname.startsWith('/_next') ||
+          pathname.startsWith('/favicon.ico')
         ) {
           return true
         }
@@ -34,7 +37,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     * - api/health (health check endpoint)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public|api/health).*)',
   ],
 }
