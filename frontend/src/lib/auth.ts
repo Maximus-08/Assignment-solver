@@ -11,9 +11,6 @@ export const authOptions: NextAuthOptions = {
           scope: 'openid email profile https://www.googleapis.com/auth/classroom.courses.readonly https://www.googleapis.com/auth/classroom.coursework.students.readonly https://www.googleapis.com/auth/classroom.student-submissions.students.readonly',
         },
       },
-      httpOptions: {
-        timeout: 10000, // 10 seconds instead of 3.5
-      },
     }),
   ],
   callbacks: {
