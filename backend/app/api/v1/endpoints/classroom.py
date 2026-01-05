@@ -35,7 +35,7 @@ async def sync_google_classroom(
     if not current_user.google_access_token:
         logger.error(f"User {current_user.email} has no Google credentials")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=http_status.HTTP_400_BAD_REQUEST,
             detail="User has no Google credentials. Please sign in with Google."
         )
     
@@ -180,13 +180,13 @@ async def sync_google_classroom(
     except HttpError as e:
         logger.error(f"Google Classroom API error: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
+            status_code=http_status.HTTP_502_BAD_GATEWAY,
             detail=f"Failed to connect to Google Classroom: {str(e)}"
         )
     except Exception as e:
         logger.error(f"Unexpected error during sync: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Sync failed: {str(e)}"
         )
 

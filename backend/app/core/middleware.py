@@ -1,4 +1,4 @@
-from fastapi import Request, HTTPException, status
+from fastapi import Request, HTTPException, status as http_status
 from fastapi.security.utils import get_authorization_scheme_param
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
@@ -36,7 +36,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             authorization = request.headers.get("Authorization")
             if not authorization:
                 return JSONResponse(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    status_code=http_status.HTTP_401_UNAUTHORIZED,
                     content={"detail": "Authorization header required"}
                 )
             
@@ -44,13 +44,13 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
             scheme, token = get_authorization_scheme_param(authorization)
             if scheme.lower() != "bearer":
                 return JSONResponse(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    status_code=http_status.HTTP_401_UNAUTHORIZED,
                     content={"detail": "Invalid authentication scheme"}
                 )
             
             if not token:
                 return JSONResponse(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    status_code=http_status.HTTP_401_UNAUTHORIZED,
                     content={"detail": "Token required"}
                 )
             
@@ -72,7 +72,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
         except Exception as e:
             logger.error(f"Authentication middleware error: {str(e)}")
             return JSONResponse(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"detail": "Internal server error"}
             )
 
@@ -103,7 +103,7 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
             logger.error(f"Request {request_id} failed: {str(e)}", exc_info=True)
             from fastapi import status as http_status
             return JSONResponse(
-                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=http_http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={
                     "detail": "Internal server error",
                     "request_id": request_id

@@ -126,7 +126,7 @@ async def get_assignments(
     except Exception as e:
         logger.error(f"Failed to retrieve assignments: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve assignments: {str(e)}"
         )
 
@@ -174,7 +174,7 @@ async def cleanup_duplicates(
     except Exception as e:
         logger.error(f"Error cleaning duplicates: {e}", exc_info=True)
         raise HTTPException(
-            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to cleanup duplicates: {str(e)}"
         )
 
@@ -190,14 +190,14 @@ async def get_assignment(
         
         if not assignment_data:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
         # Check if user owns this assignment
         if assignment_data["user_id"] != str(current_user.id):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this assignment"
             )
         
@@ -218,7 +218,7 @@ async def get_assignment(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve assignment: {str(e)}"
         )
 
@@ -232,7 +232,7 @@ async def get_assignment_internal(
         # Validate API key
         if not settings.BACKEND_API_KEY or x_api_key != settings.BACKEND_API_KEY:
             raise HTTPException(
-                status_code=http_status.HTTP_401_UNAUTHORIZED,
+                status_code=http_http_status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid API key"
             )
         
@@ -241,7 +241,7 @@ async def get_assignment_internal(
         
         if not assignment_data:
             raise HTTPException(
-                status_code=http_status.HTTP_404_NOT_FOUND,
+                status_code=http_http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
@@ -252,7 +252,7 @@ async def get_assignment_internal(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve assignment: {str(e)}"
         )
 
@@ -267,7 +267,7 @@ async def update_assignment_status_internal(
         # Validate API key
         if not settings.BACKEND_API_KEY or x_api_key != settings.BACKEND_API_KEY:
             raise HTTPException(
-                status_code=http_status.HTTP_401_UNAUTHORIZED,
+                status_code=http_http_status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid API key"
             )
         
@@ -277,7 +277,7 @@ async def update_assignment_status_internal(
         existing_assignment = await assignment_repo.get_by_id(assignment_id)
         if not existing_assignment:
             raise HTTPException(
-                status_code=http_status.HTTP_404_NOT_FOUND,
+                status_code=http_http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
@@ -294,7 +294,7 @@ async def update_assignment_status_internal(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update assignment status: {str(e)}"
         )
 
@@ -311,13 +311,13 @@ async def reset_assignment_status(
         existing_assignment = await assignment_repo.get_by_id(assignment_id)
         if not existing_assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
         if existing_assignment["user_id"] != str(current_user.id):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this assignment"
             )
         
@@ -339,7 +339,7 @@ async def reset_assignment_status(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to reset assignment status: {str(e)}"
         )
 
@@ -423,7 +423,7 @@ async def create_assignment(
     except Exception as e:
         logger.error(f"Failed to create assignment: {str(e)}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create assignment: {str(e)}"
         )
 
@@ -441,13 +441,13 @@ async def update_assignment(
         existing_assignment = await assignment_repo.get_by_id(assignment_id)
         if not existing_assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
         if existing_assignment["user_id"] != str(current_user.id):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this assignment"
             )
         
@@ -467,7 +467,7 @@ async def update_assignment(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update assignment: {str(e)}"
         )
 
@@ -484,13 +484,13 @@ async def delete_assignment(
         existing_assignment = await assignment_repo.get_by_id(assignment_id)
         if not existing_assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
         if existing_assignment["user_id"] != str(current_user.id):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this assignment"
             )
         
@@ -503,7 +503,7 @@ async def delete_assignment(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete assignment: {str(e)}"
         )
 
@@ -541,7 +541,7 @@ async def search_assignments(
         
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to search assignments: {str(e)}"
         )
 
@@ -573,20 +573,20 @@ async def upload_attachment(
         existing_assignment = await assignment_repo.get_by_id(assignment_id)
         if not existing_assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
         if existing_assignment["user_id"] != str(current_user.id):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this assignment"
             )
         
         # Validate file size
         if file.size and file.size > settings.MAX_FILE_SIZE:
             raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                status_code=http_status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 detail=f"File size exceeds maximum allowed size of {settings.MAX_FILE_SIZE} bytes"
             )
         
@@ -600,7 +600,7 @@ async def upload_attachment(
         
         if file.content_type not in allowed_types:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail=f"File type {file.content_type} not supported. Allowed types: documents and images"
             )
         
@@ -644,7 +644,7 @@ async def upload_attachment(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to upload attachment: {str(e)}"
         )
 
@@ -661,13 +661,13 @@ async def list_attachments(
         existing_assignment = await assignment_repo.get_by_id(assignment_id)
         if not existing_assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
         if existing_assignment["user_id"] != str(current_user.id):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this assignment"
             )
         
@@ -682,7 +682,7 @@ async def list_attachments(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list attachments: {str(e)}"
         )
 
@@ -700,13 +700,13 @@ async def download_attachment(
         existing_assignment = await assignment_repo.get_by_id(assignment_id)
         if not existing_assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
         if existing_assignment["user_id"] != str(current_user.id):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this assignment"
             )
         
@@ -720,7 +720,7 @@ async def download_attachment(
         
         if not attachment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Attachment not found"
             )
         
@@ -728,7 +728,7 @@ async def download_attachment(
         file_path = Path(attachment["storage_url"])
         if not file_path.exists():
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="File not found on disk"
             )
         
@@ -742,7 +742,7 @@ async def download_attachment(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to download attachment: {str(e)}"
         )
 
@@ -760,13 +760,13 @@ async def delete_attachment(
         existing_assignment = await assignment_repo.get_by_id(assignment_id)
         if not existing_assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
         if existing_assignment["user_id"] != str(current_user.id):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this assignment"
             )
         
@@ -780,7 +780,7 @@ async def delete_attachment(
         
         if not attachment_to_remove:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Attachment not found"
             )
         
@@ -805,7 +805,7 @@ async def delete_attachment(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete attachment: {str(e)}"
         )
 
@@ -866,6 +866,6 @@ async def debug_assignment_count(
     except Exception as e:
         logger.error(f"Debug endpoint error: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Debug failed: {str(e)}"
         )

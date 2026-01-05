@@ -1,6 +1,6 @@
 import httpx
 from typing import Dict, Any, Optional
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status as http_status
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from app.core.config import settings
@@ -16,7 +16,7 @@ class GoogleOAuth:
         """Verify Google OAuth ID token and get user info"""
         if not self.client_id:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Google OAuth not configured"
             )
         
@@ -33,7 +33,7 @@ class GoogleOAuth:
             for field in required_fields:
                 if field not in idinfo:
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
                         detail=f"Missing required field: {field}"
                     )
             
@@ -47,12 +47,12 @@ class GoogleOAuth:
         except ValueError as e:
             # Invalid token
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=http_status.HTTP_401_UNAUTHORIZED,
                 detail=f"Invalid Google token: {str(e)}"
             )
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error verifying Google token: {str(e)}"
             )
     
@@ -60,7 +60,7 @@ class GoogleOAuth:
         """Exchange authorization code for access token"""
         if not self.client_id or not self.client_secret:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Google OAuth not configured"
             )
         
@@ -79,7 +79,7 @@ class GoogleOAuth:
                 
                 if response.status_code != 200:
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
+                        status_code=http_status.HTTP_400_BAD_REQUEST,
                         detail="Failed to exchange code for token"
                     )
                 
@@ -87,7 +87,7 @@ class GoogleOAuth:
                 
             except httpx.RequestError as e:
                 raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                     detail=f"Error exchanging code for token: {str(e)}"
                 )
 

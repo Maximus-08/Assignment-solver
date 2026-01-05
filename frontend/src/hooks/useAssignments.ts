@@ -33,9 +33,6 @@ export function useAssignments(params?: {
     refetchOnWindowFocus: false, // Don't refetch on window focus
     enabled: typeof window !== 'undefined', // Only run on client side
   })
-      return failureCount < 3
-    },
-  })
 }
 
 export function useAssignment(id: string) {

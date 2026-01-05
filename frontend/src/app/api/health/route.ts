@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
         },
         // Short timeout for health checks to prevent build timeouts
         signal: AbortSignal.timeout(5000), // 5 second timeout
-        signal: AbortSignal.timeout(5000),
       })
       
       const endTime = Date.now()

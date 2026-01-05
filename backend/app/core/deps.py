@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import Depends, HTTPException, status as http_status, Header
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.core.security import verify_token
 from app.core.config import settings
@@ -22,7 +22,7 @@ async def get_current_user(
     user_id: str = payload.get("sub")
     if user_id is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=http_status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
         )
     
@@ -32,7 +32,7 @@ async def get_current_user(
     
     if user_data is None:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=http_status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
         )
     
@@ -56,7 +56,7 @@ async def get_current_user_or_agent(
             return None
         else:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=http_status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid API key"
             )
     
@@ -65,7 +65,7 @@ async def get_current_user_or_agent(
         return await get_current_user(credentials)
     
     raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
+        status_code=http_status.HTTP_401_UNAUTHORIZED,
         detail="No authentication provided"
     )
 

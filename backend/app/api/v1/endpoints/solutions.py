@@ -5,7 +5,7 @@ from app.models.user import UserModel
 from app.models.solution import SolutionModel, SolutionCreate
 from app.repositories.solution import SolutionRepository
 from app.repositories.assignment import AssignmentRepository
-from fastapi import Depends, HTTPException, status, Query, BackgroundTasks, Header
+from fastapi import Depends, HTTPException, status as http_status, Query, BackgroundTasks, Header
 from bson import ObjectId
 import asyncio
 import subprocess
@@ -55,7 +55,7 @@ async def get_solutions(
         
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve solutions: {str(e)}"
         )
 
@@ -74,14 +74,14 @@ async def get_assignment_solution(
         
         if not assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
         # Check if user has access to this assignment
         if str(assignment.get("user_id")) != str(current_user.id):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this assignment"
             )
         
@@ -91,7 +91,7 @@ async def get_assignment_solution(
         
         if not solution:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Solution not found for this assignment"
             )
         
@@ -106,7 +106,7 @@ async def get_assignment_solution(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to retrieve solution: {str(e)}"
         )
 
@@ -124,7 +124,7 @@ async def create_assignment_solution(
         
         if not assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
@@ -134,26 +134,26 @@ async def create_assignment_solution(
         
         if existing_solution:
             raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
+                status_code=http_status.HTTP_409_CONFLICT,
                 detail="Solution already exists for this assignment"
             )
         
         # Validate required fields for comprehensive solutions
         if not solution_data.content.strip():
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail="Solution content is required"
             )
         
         if not solution_data.explanation.strip():
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail="Solution explanation is required"
             )
         
         if not solution_data.reasoning.strip():
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail="Solution reasoning is required"
             )
         
@@ -175,7 +175,7 @@ async def create_assignment_solution(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create solution: {str(e)}"
         )
 
@@ -190,7 +190,7 @@ async def create_assignment_solution_internal(
         # Validate API key
         if not settings.BACKEND_API_KEY or x_api_key != settings.BACKEND_API_KEY:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=http_status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid API key"
             )
         
@@ -200,7 +200,7 @@ async def create_assignment_solution_internal(
         
         if not assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
@@ -214,7 +214,7 @@ async def create_assignment_solution_internal(
         # Validate required fields
         if not solution_data.content.strip():
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=http_status.HTTP_400_BAD_REQUEST,
                 detail="Solution content is required"
             )
         
@@ -253,7 +253,7 @@ async def create_assignment_solution_internal(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create solution: {str(e)}"
         )
 
@@ -271,13 +271,13 @@ async def update_solution_rating(
         
         if not assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
         if str(assignment.get("user_id")) != str(current_user.id):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this assignment"
             )
         
@@ -287,7 +287,7 @@ async def update_solution_rating(
         
         if not solution:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Solution not found for this assignment"
             )
         
@@ -297,7 +297,7 @@ async def update_solution_rating(
         
         if not success:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Failed to update solution rating"
             )
         
@@ -307,7 +307,7 @@ async def update_solution_rating(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update solution rating: {str(e)}"
         )
 
@@ -325,13 +325,13 @@ async def trigger_assignment_solution(
         
         if not assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
         if str(assignment.get("user_id")) != str(current_user.id):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this assignment"
             )
         
@@ -362,7 +362,7 @@ async def trigger_assignment_solution(
     except Exception as e:
         logger.error(f"Failed to trigger assignment solution: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to trigger solution: {str(e)}"
         )
 
@@ -380,13 +380,13 @@ async def regenerate_solution(
         
         if not assignment:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail="Assignment not found"
             )
         
         if str(assignment.get("user_id")) != str(current_user.id):
             raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
+                status_code=http_status.HTTP_403_FORBIDDEN,
                 detail="Access denied to this assignment"
             )
         
@@ -416,7 +416,7 @@ async def regenerate_solution(
     except Exception as e:
         logger.error(f"Failed to regenerate solution: {e}", exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to regenerate solution: {str(e)}"
         )
 

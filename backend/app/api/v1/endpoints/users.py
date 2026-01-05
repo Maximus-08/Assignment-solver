@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Header, status
+from fastapi import APIRouter, HTTPException, Header, status as http_status
 from typing import Optional
 from datetime import datetime
 from pydantic import BaseModel
@@ -36,7 +36,7 @@ async def list_users():
         return {"users": users}
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch users: {str(e)}"
         )
 
@@ -62,7 +62,7 @@ async def get_user_google_credentials(
     # Verify API key (from agent's BACKEND_API_KEY)
     if not settings.BACKEND_API_KEY or x_api_key != settings.BACKEND_API_KEY:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=http_status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API key"
         )
     
@@ -72,7 +72,7 @@ async def get_user_google_credentials(
     
     if not user_data:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=http_status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
     
