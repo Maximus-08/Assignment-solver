@@ -1,5 +1,6 @@
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import { syncTokenWithBackend } from '@/lib/auth-utils'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -25,39 +26,17 @@ export const authOptions: NextAuthOptions = {
         token.expiresAt = account.expires_at
         
         // Send Google tokens to backend
-        try {
-          console.log('Syncing tokens with backend...');
-          const backendUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000';
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        if (account.access_token) {
+          const backendToken = await syncTokenWithBackend(
+            account.access_token,
+            account.refresh_token,
+            account.id_token,
+            account.expires_at
+          );
           
-          const response = await fetch(`${backendUrl}/api/v1/auth/google/token`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              token: account.id_token,
-              access_token: account.access_token,
-              refresh_token: account.refresh_token,
-              expires_in: account.expires_at ? (account.expires_at - Math.floor(Date.now() / 1000)) : 3600,
-            }),
-            signal: controller.signal,
-          });
-          
-          clearTimeout(timeoutId);
-          
-          if (response.ok) {
-            const data = await response.json();
-            console.log('Backend token received:', data.access_token ? 'Yes' : 'No');
-            token.backendToken = data.access_token;
-          } else {
-            const errorText = await response.text();
-            console.error('Backend auth failed:', response.status, errorText);
+          if (backendToken) {
+            token.backendToken = backendToken;
           }
-        } catch (error) {
-          console.error('Failed to sync with backend (non-critical):', error);
-          // Continue anyway - backend sync is optional
         }
       }
       return token
