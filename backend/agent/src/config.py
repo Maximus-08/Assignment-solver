@@ -90,7 +90,7 @@ def create_settings() -> Settings:
             GOOGLE_CREDENTIALS_FILE=os.getenv("GOOGLE_CREDENTIALS_FILE"),
             GOOGLE_TOKEN_FILE=os.getenv("GOOGLE_TOKEN_FILE"),
             GEMINI_API_KEY=os.getenv("GEMINI_API_KEY"),
-            GEMINI_MODEL=os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
+            GEMINI_MODEL=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
             BACKEND_API_URL=os.getenv("BACKEND_API_URL", default_backend_url),
             BACKEND_API_KEY=os.getenv("BACKEND_API_KEY"),
             SYNC_SCHEDULE_CRON=os.getenv("SYNC_SCHEDULE_CRON", "0 8 * * *"),
