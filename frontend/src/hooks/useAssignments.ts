@@ -25,13 +25,17 @@ export function useAssignments(params?: {
     queryFn: () => apiClient.getAssignments(params),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: (failureCount, error) => {
-      if (error instanceof APIError && error.status >= 400 && error.status < 500) {
-        return false // Don't retry client errors
+      // Don't retry client errors (4xx)
+      if (error && typeof error === 'object' && 'status' in error) {
+        const status = (error as any).status
+        if (status >= 400 && status < 500) {
+          return false
+        }
       }
-      return failureCount < 2 // Only retry twice for other errors
+      // Retry server errors up to 2 times
+      return failureCount < 2
     },
     refetchOnWindowFocus: false, // Don't refetch on window focus
-    enabled: typeof window !== 'undefined', // Only run on client side
   })
 }
 
@@ -43,11 +47,12 @@ export function useAssignment(id: string) {
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
     retry: (failureCount, error) => {
-      if (error instanceof APIError && error.status === 404) {
-        return false // Don't retry not found errors
-      }
-      if (error instanceof APIError && error.status >= 400 && error.status < 500) {
-        return false // Don't retry client errors
+      // Check if error has status property (APIError-like) instead of instanceof
+      if (error && typeof error === 'object' && 'status' in error) {
+        const status = (error as any).status;
+        if (status === 404 || (status >= 400 && status < 500)) {
+          return false // Don't retry not found or client errors
+        }
       }
       return failureCount < 3
     },

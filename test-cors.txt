@@ -1,8 +1,0 @@
-@app.get("/debug/cors")
-async def debug_cors():
-    return {
-        "cors_origins": settings.BACKEND_CORS_ORIGINS,
-        "cors_origins_type": str(type(settings.BACKEND_CORS_ORIGINS)),
-        "cors_origins_length": len(settings.BACKEND_CORS_ORIGINS),
-        "environment": settings.ENVIRONMENT
-    }

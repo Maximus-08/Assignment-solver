@@ -53,7 +53,7 @@ class AssignmentModel(BaseModel):
     google_classroom_id: Optional[str] = None
     title: str
     description: str
-    subject: str
+    subject: Optional[str] = None  # Made optional - can be auto-detected
     course_name: str
     instructor: Optional[str] = None
     due_date: Optional[datetime] = None
@@ -65,6 +65,12 @@ class AssignmentModel(BaseModel):
     status: AssignmentStatus = AssignmentStatus.PENDING
     assignment_type: AssignmentType = AssignmentType.GENERAL
     attachments: List[AttachmentModel] = []
+    
+    # Duplicate detection fields
+    content_hash: Optional[str] = None
+    content_embedding: Optional[List[float]] = None
+    is_duplicate_of: Optional[str] = None
+    similarity_score: Optional[float] = None
 
     model_config = {
         "populate_by_name": True,
@@ -75,7 +81,7 @@ class AssignmentModel(BaseModel):
 class AssignmentCreate(BaseModel):
     title: str
     description: str
-    subject: str
+    subject: Optional[str] = None  # Optional - will be auto-detected if not provided
     course_name: str = "Manual Upload"
     instructor: Optional[str] = None
     due_date: Optional[datetime] = None

@@ -8,8 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "test": "jest",
-    "test:watch": "jest --watch"
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage --watchAll=false",
+    "test:ci": "jest --ci --coverage --maxWorkers=2"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",
@@ -33,6 +35,7 @@
     "@testing-library/jest-dom": "^6.1.0",
     "@testing-library/react": "^14.0.0",
     "@testing-library/user-event": "^14.5.0",
+    "@types/jest": "^29.5.0",
     "@types/node": "^20.8.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",

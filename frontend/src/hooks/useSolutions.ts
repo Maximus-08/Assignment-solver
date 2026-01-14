@@ -17,11 +17,12 @@ export function useAssignmentSolution(assignmentId: string) {
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
     retry: (failureCount, error) => {
-      if (error instanceof APIError && error.status === 404) {
-        return false // Don't retry not found errors (solution might not exist yet)
-      }
-      if (error instanceof APIError && error.status >= 400 && error.status < 500) {
-        return false // Don't retry client errors
+      // Check if error has status property (APIError-like) instead of instanceof
+      if (error && typeof error === 'object' && 'status' in error) {
+        const status = (error as any).status;
+        if (status === 404 || (status >= 400 && status < 500)) {
+          return false // Don't retry not found or client errors
+        }
       }
       return failureCount < 3
     },

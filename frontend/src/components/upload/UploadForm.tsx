@@ -26,7 +26,7 @@ export default function UploadForm() {
   const [formData, setFormData] = useState<FormData>({
     title: '',
     description: '',
-    subject: '',
+    subject: '',  // Free-text, optional
     dueDate: '',
     files: [],
   })
@@ -35,24 +35,26 @@ export default function UploadForm() {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'uploading' | 'processing' | 'success' | 'error'>('idle')
   const [uploadedAssignmentId, setUploadedAssignmentId] = useState<string | null>(null)
+  const [showSubjectSuggestions, setShowSubjectSuggestions] = useState(false)
 
-  const subjects = [
+  // Popular subject suggestions
+  const suggestedSubjects = [
     'Mathematics',
     'Science',
-    'English',
-    'History',
     'Computer Science',
     'Physics',
     'Chemistry',
     'Biology',
+    'English',
+    'History',
     'Literature',
     'Art',
-    'Music',
-    'Physical Education',
-    'Foreign Language',
-    'Social Studies',
-    'Other',
   ]
+  
+  // Filter suggestions based on input
+  const filteredSuggestions = suggestedSubjects.filter(subject =>
+    subject.toLowerCase().includes(formData.subject.toLowerCase())
+  )
 
   const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {}
@@ -73,9 +75,7 @@ export default function UploadForm() {
       newErrors.description = 'Description must be less than 5000 characters'
     }
 
-    if (!formData.subject) {
-      newErrors.subject = 'Please select a subject'
-    }
+    // Subject is now optional - no validation needed
 
     if (formData.files.length > 10) {
       newErrors.files = 'Maximum 10 files allowed'
@@ -309,32 +309,57 @@ export default function UploadForm() {
 
         {/* Subject and Due Date Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Subject Field */}
+          {/* Subject Field - Free Text Input */}
           <div>
             <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
-              Subject *
+              Subject (Optional)
             </label>
-            <select
-              id="subject"
-              value={formData.subject}
-              onChange={(e) => handleInputChange('subject', e.target.value)}
-              className={`block w-full px-3 py-2 border rounded-md shadow-sm text-gray-900 focus:outline-none focus:ring-1 ${
-                errors.subject
-                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
-                  : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500'
-              }`}
-              disabled={isSubmitting}
-            >
-              <option value="">Select a subject</option>
-              {subjects.map((subject) => (
-                <option key={subject} value={subject}>
-                  {subject}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <input
+                type="text"
+                id="subject"
+                value={formData.subject}
+                onChange={(e) => {
+                  handleInputChange('subject', e.target.value)
+                  setShowSubjectSuggestions(true)
+                }}
+                onFocus={() => setShowSubjectSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSubjectSuggestions(false), 200)}
+                className={`block w-full px-3 py-2 border rounded-md shadow-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-1 ${
+                  errors.subject
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:border-primary-500 focus:ring-primary-500'
+                }`}
+                placeholder="e.g., Mathematics, Biology, Computer Science..."
+                disabled={isSubmitting}
+              />
+              
+              {/* Suggestions Dropdown */}
+              {showSubjectSuggestions && formData.subject && filteredSuggestions.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                  {filteredSuggestions.map((subject) => (
+                    <button
+                      key={subject}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault()
+                        handleInputChange('subject', subject)
+                        setShowSubjectSuggestions(false)
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-50 text-gray-900 text-sm"
+                    >
+                      {subject}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             {errors.subject && (
               <p className="mt-1 text-sm text-red-600">{errors.subject}</p>
             )}
+            <p className="mt-1 text-sm text-gray-500">
+              Leave blank to auto-detect from description
+            </p>
           </div>
 
           {/* Due Date Field */}

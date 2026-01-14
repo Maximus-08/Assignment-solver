@@ -15,7 +15,7 @@ class SolutionModel(BaseModel):
     ai_model_used: str = "gemini-pro"
     confidence_score: float = 0.0
     processing_time: float = 0.0
-    subject_area: str
+    subject_area: Optional[str] = None  # Optional - may be auto-detected
     quality_validated: bool = False
     created_at: datetime = Field(default_factory=datetime.utcnow)
     feedback_rating: Optional[int] = None
@@ -36,5 +36,5 @@ class SolutionCreate(BaseModel):
     ai_model_used: str = "gemini-pro"
     confidence_score: float = 0.0
     processing_time: float = 0.0
-    subject_area: str
+    subject_area: Optional[str] = None  # Optional
     quality_validated: bool = False

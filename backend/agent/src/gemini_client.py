@@ -17,6 +17,7 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 
 from .config import settings
 from .models import ProcessedAssignment, GeneratedSolution
+from .context_analyzer import get_context_analyzer
 
 logger = logging.getLogger(__name__)
 
@@ -112,8 +113,12 @@ class GeminiClient:
         start_time = time.time()
         
         try:
-            # Create subject-specific and type-specific prompt
-            prompt = self._create_prompt(assignment)
+            # Analyze assignment context
+            analyzer = get_context_analyzer()
+            context = analyzer.analyze(assignment)
+            
+            # Create context-aware prompt
+            prompt = self._create_prompt(assignment, context)
             
             # Generate solution using Gemini
             response = await asyncio.to_thread(
@@ -141,16 +146,13 @@ class GeminiClient:
                 explanation=solution_data['explanation'],
                 step_by_step=solution_data['step_by_step'],
                 reasoning=solution_data['reasoning'],
-                generated_by="automation_agent",
-                ai_model_used=settings.GEMINI_MODEL,
-                confidence_score=confidence_score,
-                processing_time=processing_time,
-                subject_area=assignment.subject,
+                generated_by=context['detected_subject'] if not assignment.subject else assignment.subject,
                 quality_validated=quality_validated
             )
             
             logger.info(f"Solution generated successfully for: {assignment.title} "
-                       f"(confidence: {confidence_score:.2f}, time: {processing_time:.2f}s)")
+                       f"(subject: {context['detected_subject']}, confidence: {confidence_score:.2f}, "
+                       f"time: {processing_time:.2f}s)")
             
             return solution
             
@@ -158,39 +160,117 @@ class GeminiClient:
             logger.error(f"Failed to generate solution for {assignment.title}: {e}")
             raise
     
-    def _create_prompt(self, assignment: ProcessedAssignment) -> str:
-        """Create a comprehensive prompt for solution generation"""
+    def _create_prompt(self, assignment: ProcessedAssignment, context: Dict) -> str:
+        """Create a comprehensive, context-aware prompt for solution generation"""
         
-        # Base prompt template with enhanced instructions
-        base_prompt = f"""
-You are a highly knowledgeable expert educational assistant with deep expertise across multiple academic disciplines. Your goal is to provide exceptionally detailed, precise, and comprehensive solutions that demonstrate thorough understanding and help students learn deeply.
+        # Extract context information
+        detected_subject = context['detected_subject']
+        complexity = context['complexity_level']
+        question_type = context['question_type']
+        key_concepts = context['key_concepts']
+        has_equations = context['has_equations']
+        has_code = context['has_code']
+        
+        # Build dynamic base prompt
+        base_prompt = f"""You are a highly knowledgeable expert educational assistant with deep expertise in {detected_subject.upper()}.
+
+**Assignment Context Analysis:**
+- Subject: {detected_subject.title()} (confidence: {context['subject_confidence']:.0%})
+- Complexity Level: {complexity.upper()}
+- Question Type: {question_type.replace('_', ' ').title()}
+- Key Concepts: {', '.join(key_concepts[:5]) if key_concepts else 'N/A'}
+- Contains Math: {'Yes' if has_equations else 'No'}
+- Contains Code: {'Yes' if has_code else 'No'}
 
 **Assignment Details:**
 - Title: {assignment.title}
-- Subject: {assignment.subject}
 - Course: {assignment.course_name}
-- Type: {assignment.assignment_type}
 - Description: {assignment.description}
-
-**Your Approach:**
-- Treat this as if you are explaining to a dedicated student who wants to master the material
-- Go beyond surface-level answers - provide deep insights and comprehensive coverage
-- Make no assumptions about prior knowledge - explain all concepts thoroughly
-- Show your expertise by including nuanced details and advanced considerations
-- Balance rigor with clarity - be technically precise yet understandable
 """
+
+        # Add complexity-specific instructions
+        if complexity == 'high':
+            base_prompt += """
+**Approach for Advanced Content:**
+- Provide graduate-level depth and rigor
+- Include theoretical foundations and proofs where appropriate
+- Discuss multiple solution approaches and their trade-offs
+- Address edge cases and advanced considerations
+- Reference relevant research or advanced concepts
+"""
+        elif complexity == 'medium':
+            base_prompt += """
+**Approach for Intermediate Content:**
+- Balance depth with accessibility
+- Provide thorough explanations with examples
+- Connect concepts to practical applications
+- Include intermediate-level detail and analysis
+"""
+        else:  # low complexity
+            base_prompt += """
+**Approach for Foundational Content:**
+- Start with fundamentals and build up gradually
+- Use clear, simple language and avoid jargon
+- Provide plenty of examples and analogies
+- Focus on conceptual understanding
+"""
+        
+        # Add question-type specific guidance
+        question_guidance = {
+            'problem_solving': """
+**Problem-Solving Focus:**
+- Show ALL work step-by-step with calculations
+- Verify your answer using alternative methods
+- State assumptions clearly
+- Check units and dimensional analysis
+""",
+            'analytical': """
+**Analytical Focus:**
+- Break down the subject into components
+- Examine relationships and patterns
+- Provide critical evaluation
+- Support analysis with evidence and reasoning
+""",
+            'explanatory': """
+**Explanatory Focus:**
+- Build explanations logically from foundations
+- Use analogies and real-world examples
+- Address common misconceptions
+- Make complex ideas accessible
+""",
+            'comparative': """
+**Comparative Focus:**
+- Identify key similarities and differences
+- Use structured comparison (tables, lists)
+- Analyze implications of differences
+- Provide balanced perspective
+""",
+            'creative': """
+**Creative Focus:**
+- Propose innovative solutions or designs
+- Justify design choices and trade-offs
+- Consider multiple alternatives
+- Discuss implementation details
+""",
+            'research': """
+**Research Focus:**
+- Present findings systematically
+- Cite sources and methodologies
+- Analyze data and draw conclusions
+- Discuss limitations and future directions
+"""
+        }
+        
+        base_prompt += question_guidance.get(question_type, question_guidance['explanatory'])
         
         # Add processed materials if available
         if assignment.processed_materials:
             base_prompt += "\n**Additional Materials:**\n"
-            for material in assignment.processed_materials:
-                material_info = f"- {material['type']}: {material['metadata'].get('title', 'Unknown')}"
-                if material.get('content'):
-                    material_info += f"\n  Content: {material['content'][:200]}..."
-                base_prompt += material_info + "\n"
+            for material in assignment.processed_materials[:3]:  # Limit to first 3
+                base_prompt += f"- {material['type']}: {material['metadata'].get('title', 'Document')}\n"
         
-        # Add subject-specific instructions
-        subject_instructions = self._get_subject_specific_instructions(assignment.subject)
+        # Add subject-specific instructions using detected subject
+        subject_instructions = self._get_subject_specific_instructions(detected_subject)
         base_prompt += f"\n{subject_instructions}\n"
         
         # Add assignment type-specific instructions

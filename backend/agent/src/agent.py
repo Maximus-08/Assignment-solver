@@ -5,7 +5,7 @@ from typing import List, Optional, Dict
 from .config import settings
 from .models import ClassroomAssignment, ProcessedAssignment, GeneratedSolution
 from .classroom_client import ClassroomClient
-from .gemini_client import GeminiClient
+from .llm_provider import LLMProviderManager
 from .backend_client import BackendClient, BackendAPIError
 from .backend_auth import BackendAuthManager
 from .logging_config import log_operation_metrics
@@ -18,7 +18,7 @@ class AutomationAgent:
     def __init__(self, user_id: Optional[str] = None):
         self.user_id = user_id
         self.classroom_client = ClassroomClient()
-        self.gemini_client = GeminiClient()
+        self.llm_provider = LLMProviderManager()  # Multi-provider LLM manager
         self.backend_client = BackendClient()
         self.backend_auth = None
     
@@ -52,9 +52,9 @@ class AutomationAgent:
             logger.info("No specific user_id provided - will fetch credentials per user")
         
         # Initialize Google Gemini client
-        gemini_auth_success = await self.gemini_client.initialize()
-        if not gemini_auth_success:
-            raise RuntimeError("Failed to initialize Google Gemini API client")
+        llm_init_success = await self.llm_provider.initialize()
+        if not llm_init_success:
+            raise RuntimeError("Failed to initialize any LLM provider")
         
         logger.info("Agent initialization completed")
     
@@ -323,12 +323,12 @@ class AutomationAgent:
             )
     
     async def _generate_solution(self, assignment: ProcessedAssignment) -> GeneratedSolution:
-        """Generate AI solution using Google Gemini"""
+        """Generate AI solution using multi-provider LLM system"""
         logger.info(f"Generating solution for: {assignment.title}")
         
         try:
-            # Use Gemini client to generate comprehensive solution
-            solution = await self.gemini_client.generate_solution(assignment)
+            # Use LLM provider manager with automatic failover
+            solution = await self.llm_provider.generate_solution(assignment)
             
             logger.info(f"Successfully generated solution for: {assignment.title} "
                        f"(confidence: {solution.confidence_score:.2f})")

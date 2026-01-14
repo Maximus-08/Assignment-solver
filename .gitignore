@@ -45,8 +45,12 @@ build/
 coverage/
 .coverage
 .pytest_cache/
-*.pyc
-__pycache__/
+__tests__/
+jest.config.js
+jest.setup.js
+pytest.ini
+requirements-test.txt
+tests/
 
 # Uploads
 uploads/
@@ -58,6 +62,14 @@ token.json
 # Agent logs
 agent.log
 
+# Documentation (temporary)
 DEPLOYMENT.md
 FILE_INVENTORY.md
 RENDER_DEPLOY.md
+PRODUCTION_READY.md
+IMPLEMENTATION_GUIDE.md
+TESTING_CONTEXT_AWARE.md
+CONTEXT_AWARE_PROMPTING.md
+
+# Test files
+test-cors.txt
