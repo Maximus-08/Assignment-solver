@@ -93,20 +93,25 @@ class AssignmentRepository(BaseRepository):
         )
         return result.modified_count > 0
     
-    async def find_duplicate(self, user_id: str, title: str, description: str, subject: str, minutes: int = 5) -> Optional[Dict[str, Any]]:
-        """Find duplicate assignment created within the last N minutes"""
-        from datetime import timedelta
-        cutoff_time = datetime.utcnow() - timedelta(minutes=minutes)
-        
+    async def find_duplicate(self, user_id: str, title: str, description: str, subject: str, minutes: int = None) -> Optional[Dict[str, Any]]:
+        """Find duplicate assignment (optionally within the last N minutes)"""
         collection = await self.get_collection()
-        return await collection.find_one({
+        
+        query = {
             "user_id": user_id,
             "title": title,
             "description": description,
             "subject": subject,
-            "source": AssignmentSource.MANUAL_UPLOAD,
-            "created_at": {"$gte": cutoff_time}
-        })
+            "source": AssignmentSource.MANUAL_UPLOAD
+        }
+        
+        # Only add time filter if minutes is specified
+        if minutes is not None:
+            from datetime import timedelta
+            cutoff_time = datetime.utcnow() - timedelta(minutes=minutes)
+            query["created_at"] = {"$gte": cutoff_time}
+        
+        return await collection.find_one(query)
     
     async def find_exact_duplicates(self, user_id: str) -> List[Dict[str, Any]]:
         """Find all exact duplicate assignments for a user"""

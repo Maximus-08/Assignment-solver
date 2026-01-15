@@ -134,31 +134,39 @@ async def get_assignments(
 async def cleanup_duplicates(
     current_user: UserModel = Depends(get_current_user)
 ):
-    """Remove duplicate assignments, keeping only the oldest one for each unique assignment"""
+    """Remove duplicate assignments using similarity detection, keeping only the oldest one"""
     try:
+        from app.core.duplicate_detector import get_duplicate_detector
+        detector = get_duplicate_detector(similarity_threshold=0.85)
+        
         assignment_repo = AssignmentRepository()
         collection = await assignment_repo.get_collection()
         
-        # Get ALL assignments for this user
+        # Get ALL assignments for this user sorted by creation time (oldest first)
         all_assignments = await collection.find({
             "user_id": str(current_user.id)
         }).sort("created_at", 1).to_list(length=None)
         
-        logger.info(f"Found {len(all_assignments)} total assignments for user {current_user.id}")
+        logger.info(f"Checking {len(all_assignments)} assignments for duplicates")
         
-        # Group by title
-        seen_titles = {}
+        kept_assignments = []
         ids_to_delete = []
         
         for assignment in all_assignments:
-            title = assignment.get("title", "")
-            if title in seen_titles:
+            # Check if this assignment is a duplicate of any we're keeping
+            is_duplicate, duplicate_id, similarity = await detector.check_duplicate(
+                assignment.get("title", ""),
+                assignment.get("description", ""),
+                kept_assignments
+            )
+            
+            if is_duplicate:
                 # This is a duplicate, mark for deletion
                 ids_to_delete.append(assignment["_id"])
-                logger.info(f"Marking duplicate for deletion: {assignment['_id']} (title: {title}, source: {assignment.get('source', 'unknown')})")
+                logger.info(f"Marking duplicate for deletion: {assignment['_id']} (title: {assignment.get('title')}, similarity: {similarity:.2f})")
             else:
-                # First time seeing this title, keep it
-                seen_titles[title] = assignment["_id"]
+                # Not a duplicate, keep it
+                kept_assignments.append(assignment)
         
         # Delete all duplicates
         total_deleted = 0
@@ -350,32 +358,39 @@ async def create_assignment(
 ):
     """Create new assignment (manual upload)"""
     try:
+        from app.core.duplicate_detector import get_duplicate_detector
+        detector = get_duplicate_detector(similarity_threshold=0.85)
+        
         assignment_repo = AssignmentRepository()
         
         # Always run cleanup on manual uploads to remove any existing duplicates
         logger.info(f"Running duplicate cleanup for user {current_user.id}")
         collection = await assignment_repo.get_collection()
         
-        # Get ALL assignments for this user (not just MANUAL_UPLOAD)
+        # Get ALL assignments for this user sorted by creation time
         all_assignments = await collection.find({
             "user_id": str(current_user.id)
         }).sort("created_at", 1).to_list(length=None)
         
         logger.info(f"Found {len(all_assignments)} total assignments")
         
-        # Group by title
-        seen_titles = {}
+        # Use similarity detection for cleanup
+        kept_assignments = []
         ids_to_delete = []
         
         for assignment in all_assignments:
-            title = assignment.get("title", "")
-            if title in seen_titles:
+            is_duplicate, duplicate_id, similarity = await detector.check_duplicate(
+                assignment.get("title", ""),
+                assignment.get("description", ""),
+                kept_assignments
+            )
+            
+            if is_duplicate:
                 # This is a duplicate, mark for deletion
                 ids_to_delete.append(assignment["_id"])
-                logger.info(f"Marking duplicate for deletion: {assignment['_id']} (title: {title}, source: {assignment.get('source', 'unknown')})")
+                logger.info(f"Marking duplicate for deletion: {assignment['_id']} (similarity: {similarity:.2f})")
             else:
-                # First time seeing this title, keep it
-                seen_titles[title] = assignment["_id"]
+                kept_assignments.append(assignment)
         
         # Delete all duplicates
         if ids_to_delete:
@@ -384,17 +399,27 @@ async def create_assignment(
         else:
             logger.info(f"No duplicates found to clean for user {current_user.id}")
         
-        # Check for duplicate assignment (within last 5 minutes)
-        existing = await assignment_repo.find_duplicate(
-            user_id=str(current_user.id),
-            title=assignment_create.title,
-            description=assignment_create.description or "",
-            subject=assignment_create.subject,
-            minutes=5
+        # Check for duplicate assignment using normalized text comparison
+        # Get all user's manual uploads to check for duplicates
+        collection = await assignment_repo.get_collection()
+        user_assignments = await collection.find({
+            "user_id": str(current_user.id),
+            "source": AssignmentSource.MANUAL_UPLOAD
+        }).to_list(length=None)
+        
+        # Check if this is a duplicate using normalized comparison
+        from app.core.duplicate_detector import get_duplicate_detector
+        detector = get_duplicate_detector(similarity_threshold=0.85)
+        
+        is_duplicate, duplicate_id, similarity = await detector.check_duplicate(
+            assignment_create.title,
+            assignment_create.description or "",
+            user_assignments
         )
         
-        if existing:
-            logger.info(f"Duplicate assignment detected for user {current_user.id}, returning existing assignment {existing['_id']}")
+        if is_duplicate and duplicate_id:
+            logger.info(f"Duplicate assignment detected for user {current_user.id} (similarity: {similarity:.2f}), returning existing assignment {duplicate_id}")
+            existing = await assignment_repo.get_by_id(duplicate_id)
             existing["id"] = str(existing["_id"])
             return AssignmentResponse(**existing)
         
