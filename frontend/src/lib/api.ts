@@ -235,7 +235,9 @@ class APIClient {
   // Google Classroom sync
   async syncGoogleClassroom(): Promise<APIResponse<{ synced: number; skipped: number; total_courses: number }>> {
     return this.request<APIResponse<{ synced: number; skipped: number; total_courses: number }>>('/api/v1/classroom/sync', {
-      method: 'POST'
+      method: 'POST',
+      // Use longer timeout for sync operation (5 minutes) as it fetches from multiple courses
+      signal: AbortSignal.timeout(300000)
     })
   }
 
