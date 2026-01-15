@@ -7,10 +7,11 @@ export async function syncTokenWithBackend(
   try {
     console.log('Syncing tokens with backend...');
     const backendUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8000';
+    console.log('Backend URL:', backendUrl);
     
-    // Create a controller with a short timeout to prevent blocking
+    // Create a controller with longer timeout for production
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
     
     try {
       const response = await fetch(`${backendUrl}/api/v1/auth/google/token`, {
